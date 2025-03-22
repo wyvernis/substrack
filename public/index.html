@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+    <title>SubTrack - Track Your Subscriptions</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #000000, #1a1a1a);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            overflow-y: auto;
+            color: white;
+        }
+
+        .wrapper {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .nav {
+            position: fixed;
+            top: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            height: 80px;
+            padding: 0 50px;
+            background: linear-gradient(rgba(39, 39, 39, 0.8), transparent);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .nav-logo p {
+            color: white;
+            font-size: 25px;
+            font-weight: 600;
+        }
+
+        .nav-button {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            width: 130px;
+            height: 40px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.4);
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: .3s ease;
+            color: white;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn.white-btn {
+            background: rgba(255, 255, 255, 0.7);
+            color: #000;
+        }
+
+        .hero-section {
+            text-align: center;
+            color: white;
+            padding: 120px 0 60px;
+            margin-top: 100px;
+        }
+
+        .hero-section h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            font-weight: bold;
+            color: #4FACFE;
+        }
+
+        .hero-section p {
+            font-size: 18px;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto 30px;
+        }
+
+        .get-started-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            border: none;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .get-started-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .section-header {
+            text-align: center;
+            font-size: 36px;
+            color: #4FACFE;
+            margin: 80px 0 40px;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            padding: 20px;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .feature-card i {
+            font-size: 40px;
+            color: #4FACFE;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .about-section {
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .founders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .founder-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .founder-image {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            margin: 0 auto 15px;
+            overflow: hidden;
+        }
+
+        .founder-name {
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .founder-role {
+            color: #4FACFE;
+            margin-bottom: 10px;
+        }
+
+        .founder-email {
+            color: white;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .founder-email:hover {
+            color: #4FACFE;
+        }
+
+        .contact-section {
+            padding: 60px 0;
+            text-align: center;
+        }
+
+        .contact-content {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .contact-content a {
+            color: #4FACFE;
+            text-decoration: none;
+        }
+
+        .social-icons {
+            margin-top: 20px;
+        }
+
+        .social-icons a {
+            color: white;
+            font-size: 24px;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .social-icons a:hover {
+            color: #4FACFE;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .nav {
+                padding: 0 20px;
+            }
+
+            .hero-section h1 {
+                font-size: 36px;
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .founders-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">
+            <p onclick="location.href='index.html'">SubsTrack.</p>
+        </div>
+        <div class="nav-button">
+            <button class="btn white-btn" id="loginBtn" onclick="location.href='login.html'">Sign In</button>
+            <button class="btn" id="registerBtn" onclick="location.href='register.html'">Sign Up</button>
+        </div>
+    </nav>
+
+    <div class="wrapper">
+        <div class="content">
+            <section class="hero-section">
+                <h1>Track All Your Subscriptions in One Place</h1>
+                <p>Never miss a payment, save money on unused subscriptions, and stay within your budget.</p>
+                <button class="get-started-btn" onclick="location.href='register.html'">Get Started →</button>
+            </section>
+
+            <section class="features-section">
+                <h2 class="section-header">Key Features</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <i class='bx bx-list-check'></i>
+                        <h3>Track All Subscriptions</h3>
+                        <p>Add and group subscriptions like streaming, utilities, or magazines. Set payment dates and methods.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class='bx bx-bell'></i>
+                        <h3>Never Miss a Payment</h3>
+                        <p>Get reminders via email or app alerts before payments are charged to avoid late fees.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class='bx bx-chart'></i>
+                        <h3>See Where Your Money Goes</h3>
+                        <p>View charts showing monthly costs and which subscriptions are your biggest spenders.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class='bx bx-dollar-circle'></i>
+                        <h3>Save Money on Unused Subs</h3>
+                        <p>Get suggestions for cancelling or downgrading subscriptions you rarely use.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class='bx bx-wallet'></i>
+                        <h3>Stay Within Budget</h3>
+                        <p>Set monthly spending limits and get alerts when you're about to go over budget.</p>
+                    </div>
+                    <div class="feature-card">
+                        <i class='bx bx-group'></i>
+                        <h3>Shared Plan Contributions</h3>
+                        <p>Invite others to join subscription groups and track who has paid their share.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="about-section">
+                <h2 class="section-header">About SubsTrack</h2>
+                <div class="about-content">
+                    <p>SubsTrack was created to help people manage the growing number of subscription services that have become part of everyday life. Our mission is to help you save money and avoid unwanted charges by keeping all your subscriptions organized in one place. We're committed to helping you take control of your recurring payments and make smarter financial decisions.</p>
+                </div>
+            </section>
+
+            <section class="team-section">
+                <h2 class="section-header">Our Team</h2>
+                <div class="founders-grid">
+                    <div class="founder-card">
+                        <div class="founder-image">
+                            <img src="../images/download.jpg" alt="Gayatri" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <h3 class="founder-name">Gayatri</h3>
+                        <p class="founder-role">Student</p>
+                        <a href="mailto:vgayatri23comp@student.mes.ac.in" class="founder-email">vgayatri23comp@student.mes.ac.in</a>
+                    </div>
+
+                    <div class="founder-card">
+                        <div class="founder-image">
+                            <img src="../images/download.jpg" alt="Snehal" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <h3 class="founder-name">Snehal</h3>
+                        <p class="founder-role">Student</p>
+                        <a href="mailto:csnehal23comp@student.mes.ac.in" class="founder-email">csnehal23comp@student.mes.ac.in</a>
+                    </div>
+
+                    <div class="founder-card">
+                        <div class="founder-image">
+                            <img src="../images/download.jpg" alt="Aditi" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <h3 class="founder-name">Aditi</h3>
+                        <p class="founder-role">Student</p>
+                        <a href="mailto:gaditi23comp@student.mes.ac.in" class="founder-email">gaditi23comp@student.mes.ac.in</a>
+                    </div>
+                </div>
+            </section>
+
+            <section class="contact-section">
+                <h2 class="section-header">Contact Us</h2>
+                <div class="contact-content">
+                    <p>Have questions or feedback? We'd love to hear from you!</p>
+                    <p>Email us at: <a href="mailto:support@substrack.com">support@substrack.com</a></p>
+                    <p>Follow us on social media for updates and tips.</p>
+                    <div class="social-icons">
+                        <a href="#"><i class='bx bxl-facebook'></i></a>
+                        <a href="#"><i class='bx bxl-twitter'></i></a>
+                        <a href="#"><i class='bx bxl-instagram'></i></a>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <footer class="footer">
+            <p>© 2025 SubsTrack. All rights reserved.</p>
+        </footer>
+    </div>
+</body>
+</html>
