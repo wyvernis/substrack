@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // CORS configuration
 app.use(cors({
-    origin: [process.env.CLIENT_URL, 'http://localhost:3000'],
+    origin: true, // Allow all origins in development
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
@@ -33,6 +33,12 @@ app.use(cookieParser());
 
 // Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Request logging middleware
+app.use((req, res, next) => {
+    console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
+    next();
+});
 
 // Basic route for testing
 app.get('/', (req, res) => {
@@ -73,7 +79,7 @@ const limiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100 // limit each IP to 100 requests per windowMs
 });
-app.use('/api/', limiter);
+app.use('/api', limiter);
 
 // Load routes
 try {
@@ -131,21 +137,21 @@ app.get('/api', (req, res) => {
 });
 
 // Handle 404
-app.use((req, res, next) => {
-    console.log(`404 - Not Found - ${req.method} ${req.originalUrl}`);
+app.use((req, res) => {
+    console.log(`404 - Not Found: ${req.method} ${req.path}`);
     res.status(404).json({ 
         message: 'Route not found',
-        path: req.originalUrl,
-        suggestion: 'Visit /api for API documentation'
+        path: req.path,
+        method: req.method
     });
 });
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-    console.error('Error:', err);
-    res.status(err.status || 500).json({
-        message: err.message || 'Something went wrong!',
-        error: process.env.NODE_ENV === 'development' ? err : {}
+    console.error('Server error:', err);
+    res.status(500).json({
+        message: 'Internal server error',
+        error: process.env.NODE_ENV === 'development' ? err.message : {}
     });
 });
 
@@ -160,11 +166,16 @@ const startServer = async () => {
 
         const server = app.listen(PORT, HOST, () => {
             console.log('✓ Database connection successful');
-            console.log(`✓ Server is running at http://${HOST}:${PORT}`);
-            console.log(`✓ Test the server at: http://localhost:${PORT}/test`);
-            console.log(`✓ API documentation at: http://localhost:${PORT}/api`);
-            console.log(`✓ Health check at: http://localhost:${PORT}/health`);
-            console.log(`✓ Frontend URL: ${process.env.CLIENT_URL}`);
+            console.log(`
+    Server is running! 🚀
+    
+    Local:            http://localhost:${PORT}
+    Test endpoint:    http://localhost:${PORT}/test
+    Health check:     http://localhost:${PORT}/health
+    API endpoint:     http://localhost:${PORT}/api
+    
+    Environment:      ${process.env.NODE_ENV}
+    `);
         });
 
         // Handle server errors

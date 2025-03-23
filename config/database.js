@@ -23,16 +23,38 @@ const testConnection = async () => {
         const [result] = await connection.query('SELECT 1');
         console.log('✓ Database query successful');
         
+        // Check if required tables exist
+        const [tables] = await connection.query(`
+            SELECT table_name 
+            FROM information_schema.tables 
+            WHERE table_schema = ?`, 
+            [process.env.DB_NAME]
+        );
+        
+        const requiredTables = ['users', 'subscriptions', 'shared_subscriptions', 'budget_settings', 'password_reset_tokens'];
+        const existingTables = tables.map(t => t.table_name);
+        const missingTables = requiredTables.filter(t => !existingTables.includes(t));
+        
+        if (missingTables.length > 0) {
+            console.warn('⚠ Missing tables:', missingTables);
+            console.warn('Please run the database.sql script to create all required tables');
+        } else {
+            console.log('✓ All required tables exist');
+        }
+        
         connection.release();
     } catch (error) {
         console.error('✗ Database connection failed:', error.message);
         console.error('Please check your database credentials in .env file');
-        process.exit(1);
+        throw error;
     }
 };
 
 // Execute connection test
-testConnection();
+testConnection().catch(err => {
+    console.error('Database initialization failed:', err);
+    process.exit(1);
+});
 
 // Handle pool errors
 pool.on('error', (err) => {

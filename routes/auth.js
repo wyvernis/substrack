@@ -7,24 +7,42 @@ const pool = require('../config/database');
 const auth = require('../middleware/auth');
 const { sendPasswordResetEmail } = require('../utils/email');
 
-// Register User
+// @route   POST /api/auth/register
+// @desc    Register a user
+// @access  Public
 router.post('/register', [
-    check('name', 'Name is required').not().isEmpty(),
-    check('email', 'Please include a valid email').isEmail(),
+    check('firstName', 'First name is required').trim().not().isEmpty(),
+    check('lastName', 'Last name is required').trim().not().isEmpty(),
+    check('email', 'Please include a valid email').isEmail().normalizeEmail(),
     check('password', 'Password must be 6 or more characters').isLength({ min: 6 })
 ], async (req, res) => {
     try {
+        console.log('Registration attempt:', {
+            body: req.body,
+            headers: req.headers
+        });
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            console.log('Validation errors:', errors.array());
+            return res.status(400).json({ 
+                success: false,
+                message: 'Validation failed',
+                errors: errors.array() 
+            });
         }
 
-        const { name, email, password } = req.body;
+        const { firstName, lastName, email, password } = req.body;
+        const name = `${firstName} ${lastName}`.trim();
 
         // Check if user exists
-        const [existingUser] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
-        if (existingUser.length > 0) {
-            return res.status(400).json({ message: 'User already exists' });
+        const [existingUsers] = await pool.query('SELECT * FROM users WHERE email = ?', [email]);
+        
+        if (existingUsers && existingUsers.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'User already exists with this email'
+            });
         }
 
         // Hash password
@@ -37,30 +55,51 @@ router.post('/register', [
             [name, email, hashedPassword]
         );
 
-        // Create token
-        const token = jwt.sign(
-            { id: result.insertId },
+        if (!result.insertId) {
+            throw new Error('Failed to create user');
+        }
+
+        // Generate JWT
+        const payload = {
+            user: {
+                id: result.insertId,
+                name: name,
+                email: email
+            }
+        };
+
+        jwt.sign(
+            payload,
             process.env.JWT_SECRET,
-            { expiresIn: '24h' }
+            { expiresIn: '24h' },
+            (err, token) => {
+                if (err) throw err;
+                res.status(201).json({
+                    success: true,
+                    message: 'User registered successfully',
+                    token: token,
+                    user: {
+                        id: result.insertId,
+                        name: name,
+                        email: email
+                    }
+                });
+            }
         );
 
-        res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            maxAge: 24 * 60 * 60 * 1000 // 24 hours
-        });
-
-        res.json({
-            message: 'User registered successfully',
-            user: { id: result.insertId, name, email }
-        });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Registration error:', err);
+        res.status(500).json({
+            success: false,
+            message: 'Server error during registration',
+            error: process.env.NODE_ENV === 'development' ? err.message : undefined
+        });
     }
 });
 
-// Login User
+// @route   POST /api/auth/login
+// @desc    Login user & get token
+// @access  Public
 router.post('/login', [
     check('email', 'Please include a valid email').isEmail(),
     check('password', 'Password is required').exists()
@@ -105,12 +144,14 @@ router.post('/login', [
             user: { id: user.id, name: user.name, email: user.email }
         });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Login error:', err);
+        res.status(500).json({ message: 'Server error during login' });
     }
 });
 
-// Forgot Password
+// @route   POST /api/auth/forgot-password
+// @desc    Request password reset
+// @access  Public
 router.post('/forgot-password', [
     check('email', 'Please include a valid email').isEmail()
 ], async (req, res) => {
@@ -151,12 +192,14 @@ router.post('/forgot-password', [
 
         res.json({ message: 'Password reset email sent' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Forgot password error:', err);
+        res.status(500).json({ message: 'Server error during password reset request' });
     }
 });
 
-// Reset Password
+// @route   POST /api/auth/reset-password/:token
+// @desc    Reset password
+// @access  Public
 router.post('/reset-password/:token', [
     check('password', 'Password must be 6 or more characters').isLength({ min: 6 })
 ], async (req, res) => {
@@ -200,12 +243,14 @@ router.post('/reset-password/:token', [
 
         res.json({ message: 'Password reset successful' });
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Reset password error:', err);
+        res.status(500).json({ message: 'Server error during password reset' });
     }
 });
 
-// Get User Profile
+// @route   GET /api/auth/profile
+// @desc    Get user profile
+// @access  Private
 router.get('/profile', auth, async (req, res) => {
     try {
         const [users] = await pool.query(
@@ -219,12 +264,14 @@ router.get('/profile', auth, async (req, res) => {
 
         res.json(users[0]);
     } catch (err) {
-        console.error(err);
-        res.status(500).json({ message: 'Server error' });
+        console.error('Profile error:', err);
+        res.status(500).json({ message: 'Server error while fetching profile' });
     }
 });
 
-// Logout User
+// @route   POST /api/auth/logout
+// @desc    Logout user
+// @access  Private
 router.post('/logout', (req, res) => {
     res.clearCookie('token');
     res.json({ message: 'Logged out successfully' });

@@ -1,7 +1,7 @@
 CREATE DATABASE IF NOT EXISTS substrack_db;
 USE substrack_db;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INT PRIMARY KEY AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     email VARCHAR(255) NOT NULL UNIQUE,
@@ -10,7 +10,7 @@ CREATE TABLE users (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE password_reset_tokens (
+CREATE TABLE IF NOT EXISTS password_reset_tokens (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     token VARCHAR(255) NOT NULL,
@@ -25,36 +25,37 @@ CREATE TABLE categories (
     color VARCHAR(20)
 );
 
-CREATE TABLE subscriptions (
+CREATE TABLE IF NOT EXISTS subscriptions (
     id INT PRIMARY KEY AUTO_INCREMENT,
     user_id INT NOT NULL,
     name VARCHAR(255) NOT NULL,
-    category_id INT,
-    price DECIMAL(10,2) NOT NULL,
-    billing_cycle ENUM('monthly', 'yearly') DEFAULT 'monthly',
-    next_payment_date DATE NOT NULL,
+    description TEXT,
+    amount DECIMAL(10, 2) NOT NULL,
+    billing_cycle ENUM('monthly', 'yearly', 'quarterly') NOT NULL,
+    next_billing_date DATE NOT NULL,
+    category VARCHAR(100),
+    status ENUM('active', 'cancelled', 'paused') DEFAULT 'active',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (category_id) REFERENCES categories(id)
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
-CREATE TABLE shared_subscriptions (
+CREATE TABLE IF NOT EXISTS shared_subscriptions (
     id INT PRIMARY KEY AUTO_INCREMENT,
     subscription_id INT NOT NULL,
-    owner_id INT NOT NULL,
-    member_id INT NOT NULL,
-    share_amount DECIMAL(10,2) NOT NULL,
-    payment_status BOOLEAN DEFAULT FALSE,
+    shared_with_email VARCHAR(255) NOT NULL,
+    share_percentage DECIMAL(5, 2) NOT NULL,
+    status ENUM('pending', 'accepted', 'rejected') DEFAULT 'pending',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE,
-    FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (member_id) REFERENCES users(id) ON DELETE CASCADE
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE CASCADE
 );
 
-CREATE TABLE budget_settings (
+CREATE TABLE IF NOT EXISTS budget_settings (
     id INT PRIMARY KEY AUTO_INCREMENT,
-    user_id INT NOT NULL UNIQUE,
-    monthly_budget DECIMAL(10,2) NOT NULL DEFAULT 0,
+    user_id INT NOT NULL,
+    monthly_budget DECIMAL(10, 2),
+    alert_threshold DECIMAL(5, 2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
