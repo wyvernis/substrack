@@ -16,7 +16,6 @@ const Dashboard = {
     budget: { label: 'Budget', title: () => 'Monthly Budget', showActions: false },
     insights: { label: 'Insights', title: () => 'Smart Insights', showActions: false },
     shared: { label: 'Shared', title: () => 'Shared Plans', showActions: false },
-    import: { label: 'Import', title: () => 'Import Subscriptions', showActions: false },
   },
 
   async init() {
@@ -34,6 +33,13 @@ const Dashboard = {
 
   money(n) { return App.formatMoney(n); },
 
+  fmtDate(value) {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  },
+
   monthlyAmount(s) {
     const a = parseFloat(s.amount) || 0;
     switch (s.billing_cycle) {
@@ -46,12 +52,10 @@ const Dashboard = {
 
   bindUI() {
     document.getElementById('addSubBtn').onclick = () => this.openModal();
-    document.getElementById('importCsvBtn').onclick = () => this.switchTab('import');
     document.getElementById('subForm').onsubmit = (e) => this.handleSave(e);
     document.getElementById('saveBudgetBtn').onclick = () => this.saveBudget();
     document.getElementById('addSharedBtn').onclick = () => this.openSharedModal();
     document.getElementById('sharedForm').onsubmit = (e) => this.handleShared(e);
-    document.getElementById('csvImportBtn').onclick = () => this.importCsv();
     document.getElementById('searchInput').oninput = (e) => {
       this.searchQuery = e.target.value.toLowerCase();
       this.renderTable();
@@ -91,6 +95,7 @@ const Dashboard = {
   },
 
   switchTab(tab) {
+    if (!document.getElementById(`panel-${tab}`)) tab = 'overview';
     document.querySelectorAll('.tab-panel').forEach((p) => p.classList.remove('active'));
     document.getElementById(`panel-${tab}`)?.classList.add('active');
     this.updateHeader(tab);
@@ -142,12 +147,15 @@ const Dashboard = {
 
     const b = o.budget;
     const fill = document.getElementById('budgetWidgetFill');
-    fill.style.width = `${b.percent}%`;
+    const pctRaw = b.limit > 0 ? (b.spent / b.limit) * 100 : 0;
+    fill.style.width = `${Math.min(pctRaw, 100)}%`;
     fill.classList.toggle('over', b.exceeded);
-    document.getElementById('budgetWidgetPct').textContent = b.limit > 0 ? `${Math.round(b.percent)}%` : '—';
-    document.getElementById('budgetWidgetText').textContent = b.limit > 0
+    document.getElementById('budgetWidgetPct').textContent = b.limit > 0 ? `${Math.round(pctRaw)}%` : '—';
+    const budgetText = document.getElementById('budgetWidgetText');
+    budgetText.textContent = b.limit > 0
       ? `${this.money(b.spent)} of ${this.money(b.limit)}${b.exceeded ? ' — over budget!' : ''}`
       : 'Set a budget in the Budget tab';
+    budgetText.classList.toggle('budget-widget__text--over', Boolean(b.exceeded));
 
     const upcoming = o.upcoming || [];
     document.getElementById('timelineCount').textContent = upcoming.length
@@ -474,16 +482,6 @@ const Dashboard = {
       await App.api(`/api/shared/${id}`, { method: 'DELETE' });
       App.toast('Removed');
       this.loadShared();
-    } catch (err) { App.toast(err.message, 'error'); }
-  },
-
-  async importCsv() {
-    const csv = document.getElementById('csvInput').value;
-    try {
-      const res = await App.api('/api/subscriptions/import', { method: 'POST', body: JSON.stringify({ csv }) });
-      document.getElementById('importResult').textContent = `Imported ${res.imported} subscription(s).`;
-      if (res.errors?.length) App.toast(`${res.errors.length} row(s) had errors`, 'error');
-      await this.loadAll();
     } catch (err) { App.toast(err.message, 'error'); }
   },
 

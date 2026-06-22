@@ -21,7 +21,6 @@
           <a href="#" data-tab="budget" class="tab-link">Budget</a>
           <a href="#" data-tab="insights" class="tab-link">Insights</a>
           <a href="#" data-tab="shared" class="tab-link">Shared Plans</a>
-          <a href="#" data-tab="import" class="tab-link">Import CSV</a>
           <div class="nav-dropdown__divider"></div>
           <a href="/dashboard/settings.html">Settings</a>
           <button type="button" class="nav-dropdown__logout" onclick="App.logout()">Logout</button>
@@ -38,8 +37,7 @@
           <h1 id="dashHeaderTitle">Dashboard</h1>
         </div>
         <div class="header-actions" id="headerActions">
-          <button class="pill-btn pill-btn--ghost-light" id="importCsvBtn">Import CSV</button>
-          <button class="pill-btn pill-btn--graphite" id="addSubBtn">+ Add Subscription</button>
+          <button class="pill-btn pill-btn--graphite" id="addSubBtn">+ Add</button>
         </div>
       </div>
 
@@ -188,14 +186,6 @@
         <p class="body-text shared-intro">Split subscription costs with family or workspace members.</p>
         <div id="sharedList"></div>
         <div class="empty-state" id="emptyShared" style="display:none"><h3>No shared plans</h3></div>
-      </div>
-
-      <!-- IMPORT -->
-      <div class="tab-panel" id="panel-import">
-        <p class="body-lg import-hint">Paste CSV with columns: name, amount, category, billing_cycle, next_billing_date, notes, tags</p>
-        <textarea class="csv-textarea" id="csvInput" rows="8" placeholder="name,amount,category,billing_cycle,next_billing_date&#10;Netflix,649,streaming,monthly,2026-07-01"></textarea>
-        <button class="pill-btn pill-btn--graphite" id="csvImportBtn">Import</button>
-        <p class="body-text" id="importResult"></p>
       </div>
     </div>
   </div>

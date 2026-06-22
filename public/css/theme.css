@@ -1022,12 +1022,14 @@ img {
   justify-content: center;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
   transition: opacity 0.3s, visibility 0.3s;
 }
 
 .modal-overlay.open {
   opacity: 1;
   visibility: visible;
+  pointer-events: auto;
 }
 
 .modal {
@@ -1297,6 +1299,15 @@ select.form-input {
   letter-spacing: 0.06em;
   color: var(--color-ash);
   margin-bottom: var(--spacing-12);
+}
+
+.budget-widget__text--over {
+  color: var(--color-carbon);
+  font-weight: 600;
+}
+
+.theme-dark .budget-widget__text--over {
+  color: #ff8fa8;
 }
 
 .budget-bar--lg { height: 6px; }

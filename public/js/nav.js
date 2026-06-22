@@ -2,7 +2,14 @@
 
 const AppNav = {
   init(options = {}) {
-    this.options = options;
+    this.options = { ...this.options, ...options };
+
+    if (this._initialized) {
+      if (options.onTabSelect) this.bindDashboardTabs(options.onTabSelect);
+      return;
+    }
+
+    this._initialized = true;
     this.bindMenu();
     this.bindThemeToggle();
     this.highlightCurrentPage();
@@ -20,7 +27,8 @@ const AppNav = {
       btn.setAttribute('aria-expanded', open);
     });
 
-    document.addEventListener('click', () => {
+    document.addEventListener('click', (e) => {
+      if (btn.contains(e.target) || panel.contains(e.target)) return;
       panel.classList.remove('open');
       btn.setAttribute('aria-expanded', 'false');
     });
