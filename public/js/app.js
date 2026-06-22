@@ -71,7 +71,7 @@ const App = {
   notify(title, body) {
     if (!this.settings.reminders?.browserEnabled) return;
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification(title, { body, icon: '/favicon.ico' });
+      new Notification(title, { body, icon: '/favicon.svg' });
     }
   },
 
