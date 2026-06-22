@@ -59,5 +59,50 @@ const sendPasswordResetEmail = async (email, resetToken) => {
 };
 
 module.exports = {
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    sendRenewalReminder: async (email, subscription, daysLeft) => {
+        const mailOptions = {
+            from: process.env.EMAIL_FROM,
+            to: email,
+            subject: `Renewal reminder: ${subscription.name} in ${daysLeft} day(s)`,
+            html: `
+                <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
+                    <h2 style="font-weight:300;">Upcoming renewal</h2>
+                    <p><strong>${subscription.name}</strong> renews in <strong>${daysLeft} day(s)</strong>.</p>
+                    <p>Amount: ${subscription.amount} · Next billing: ${new Date(subscription.next_billing_date).toDateString()}</p>
+                    <p style="color:#6d6d6d;font-size:12px;">Manage subscriptions at SubsTrack dashboard.</p>
+                </div>
+            `,
+        };
+        await transporter.sendMail(mailOptions);
+    },
+    sendTrialReminder: async (email, subscription, daysLeft) => {
+        const mailOptions = {
+            from: process.env.EMAIL_FROM,
+            to: email,
+            subject: `Trial ending: ${subscription.name}`,
+            html: `
+                <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
+                    <h2 style="font-weight:300;">Trial ending soon</h2>
+                    <p><strong>${subscription.name}</strong> trial ends in <strong>${daysLeft} day(s)</strong>.</p>
+                    <p>Cancel before the trial ends to avoid charges.</p>
+                </div>
+            `,
+        };
+        await transporter.sendMail(mailOptions);
+    },
+    sendBudgetAlert: async (email, spent, budget, currency) => {
+        const mailOptions = {
+            from: process.env.EMAIL_FROM,
+            to: email,
+            subject: 'SubsTrack: Monthly budget exceeded',
+            html: `
+                <div style="font-family:Inter,sans-serif;max-width:560px;margin:0 auto;padding:24px;">
+                    <h2 style="font-weight:300;">Budget alert</h2>
+                    <p>Your subscription spending (${spent.toFixed(2)} ${currency}) has exceeded your monthly budget (${budget.toFixed(2)} ${currency}).</p>
+                </div>
+            `,
+        };
+        await transporter.sendMail(mailOptions);
+    },
 }; 

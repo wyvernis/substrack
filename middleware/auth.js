@@ -18,7 +18,7 @@ const auth = (req, res, next) => {
         try {
             // Verify token
             const verified = jwt.verify(token, process.env.JWT_SECRET);
-            req.user = verified;
+            req.user = verified.user;
             next();
         } catch (verifyError) {
             console.error('Token verification failed:', verifyError.message);

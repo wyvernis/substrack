@@ -5,6 +5,7 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const checkDatabase = require('./utils/checkDb');
+const { startReminderScheduler } = require('./utils/reminderScheduler');
 require('dotenv').config();
 
 const app = express();
@@ -31,7 +32,7 @@ app.use(helmet({
 }));
 app.use(cookieParser());
 
-// Serve static files
+// Serve static files (must be before API catch-all for SPA pages)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Request logging middleware
@@ -40,12 +41,7 @@ app.use((req, res, next) => {
     next();
 });
 
-// Basic route for testing
-app.get('/', (req, res) => {
-    res.json({ message: 'Welcome to Substrack API' });
-});
-
-// Test route
+// API documentation route (moved — root serves index.html via static)
 app.get('/test', (req, res) => {
     res.json({ message: 'Server is running!' });
 });
@@ -60,7 +56,7 @@ app.get('/health', async (req, res) => {
             status: 'ok', 
             timestamp: new Date(),
             env: process.env.NODE_ENV,
-            database: 'connected',
+            database: 'mongodb connected',
             api: 'running'
         });
     } catch (error) {
@@ -87,12 +83,13 @@ try {
     const subscriptionRoutes = require('./routes/subscriptions');
     const sharedRoutes = require('./routes/shared');
     const budgetRoutes = require('./routes/budget');
+    const analyticsRoutes = require('./routes/analytics');
 
-    // Routes
     app.use('/api/auth', authRoutes);
     app.use('/api/subscriptions', subscriptionRoutes);
     app.use('/api/shared', sharedRoutes);
     app.use('/api/budget', budgetRoutes);
+    app.use('/api/analytics', analyticsRoutes);
 
     console.log('✓ All routes loaded successfully');
 } catch (error) {
@@ -136,14 +133,17 @@ app.get('/api', (req, res) => {
     });
 });
 
-// Handle 404
+// Handle 404 — serve JSON for API routes, plain message for pages
 app.use((req, res) => {
     console.log(`404 - Not Found: ${req.method} ${req.path}`);
-    res.status(404).json({ 
-        message: 'Route not found',
-        path: req.path,
-        method: req.method
-    });
+    if (req.path.startsWith('/api')) {
+        return res.status(404).json({
+            message: 'Route not found',
+            path: req.path,
+            method: req.method
+        });
+    }
+    res.status(404).send('Page not found');
 });
 
 // Error handling middleware
@@ -166,6 +166,7 @@ const startServer = async () => {
 
         const server = app.listen(PORT, HOST, () => {
             console.log('✓ Database connection successful');
+            startReminderScheduler();
             console.log(`
     Server is running! 🚀
     
