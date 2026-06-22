@@ -6,6 +6,7 @@ const App = {
 
   init() {
     this.initNav();
+    this.initHeroVideo();
     this.initCookieBanner();
     this.initReveal();
     this.initSmoothAnchors();
@@ -96,6 +97,14 @@ const App = {
 
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
+  },
+
+  initHeroVideo() {
+    const video = document.getElementById('heroBgVideo');
+    if (!video) return;
+    const play = () => video.play().catch(() => {});
+    play();
+    video.addEventListener('loadeddata', play);
   },
 
   isOverLightSection() {
