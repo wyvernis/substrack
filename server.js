@@ -35,6 +35,11 @@ app.use(cookieParser());
 // Serve static files (must be before API catch-all for SPA pages)
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.get('/favicon.ico', (req, res) => {
+    res.type('image/svg+xml');
+    res.sendFile(path.join(__dirname, 'public', 'favicon.svg'));
+});
+
 // Request logging middleware
 app.use((req, res, next) => {
     console.log(`${new Date().toISOString()} - ${req.method} ${req.path}`);
