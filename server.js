@@ -162,17 +162,11 @@ app.use((err, req, res, next) => {
 
 // Start server
 const startServer = async () => {
-    try {
-        // Check database connection before starting server
-        await checkDatabase();
-        
-        const PORT = process.env.PORT || 5001;
-        const HOST = '0.0.0.0';
+    const PORT = process.env.PORT || 5001;
+    const HOST = '0.0.0.0';
 
-        const server = app.listen(PORT, HOST, () => {
-            console.log('✓ Database connection successful');
-            startReminderScheduler();
-            console.log(`
+    const server = app.listen(PORT, HOST, () => {
+        console.log(`
     Server is running! 🚀
     
     Local:            http://localhost:${PORT}
@@ -182,31 +176,38 @@ const startServer = async () => {
     
     Environment:      ${process.env.NODE_ENV}
     `);
-        });
 
-        // Handle server errors
-        server.on('error', (error) => {
-            if (error.syscall !== 'listen') {
+        // Try DB connection after server starts so process doesn't crash on transient DB outages.
+        checkDatabase()
+            .then(() => {
+                console.log('✓ Database connection successful');
+                startReminderScheduler();
+            })
+            .catch((error) => {
+                console.error('✗ Database unavailable at startup:', error.message);
+                console.error('Server is running; DB-dependent routes may return 503 until connection is restored.');
+            });
+    });
+
+    // Handle server errors
+    server.on('error', (error) => {
+        if (error.syscall !== 'listen') {
+            throw error;
+        }
+
+        switch (error.code) {
+            case 'EACCES':
+                console.error('✗ Port requires elevated privileges');
+                process.exit(1);
+                break;
+            case 'EADDRINUSE':
+                console.error('✗ Port is already in use');
+                process.exit(1);
+                break;
+            default:
                 throw error;
-            }
-
-            switch (error.code) {
-                case 'EACCES':
-                    console.error('✗ Port requires elevated privileges');
-                    process.exit(1);
-                    break;
-                case 'EADDRINUSE':
-                    console.error('✗ Port is already in use');
-                    process.exit(1);
-                    break;
-                default:
-                    throw error;
-            }
-        });
-    } catch (error) {
-        console.error('✗ Failed to start server:', error.message);
-        process.exit(1);
-    }
+        }
+    });
 };
 
 // Handle unhandled promise rejections
