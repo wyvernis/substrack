@@ -8,6 +8,7 @@ const PasswordResetToken = require('../models/PasswordResetToken');
 const auth = require('../middleware/auth');
 const formatDoc = require('../utils/formatDoc');
 const { sendPasswordResetEmail } = require('../utils/email');
+const checkDatabase = require('../utils/checkDb');
 
 const signToken = (user) => {
     const payload = {
@@ -20,6 +21,16 @@ const signToken = (user) => {
     return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '24h' });
 };
 
+const isDatabaseUnavailableError = (err) => {
+    const message = String(err?.message || '').toLowerCase();
+    return (
+        err?.name === 'MongooseError' ||
+        message.includes('buffering timed out') ||
+        message.includes('server selection') ||
+        message.includes('econnrefused')
+    );
+};
+
 router.post('/register', [
     check('firstName', 'First name is required').trim().not().isEmpty(),
     check('lastName', 'Last name is required').trim().not().isEmpty(),
@@ -27,6 +38,7 @@ router.post('/register', [
     check('password', 'Password must be 6 or more characters').isLength({ min: 6 }),
 ], async (req, res) => {
     try {
+        await checkDatabase();
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
@@ -66,6 +78,12 @@ router.post('/register', [
         });
     } catch (err) {
         console.error('Registration error:', err);
+        if (isDatabaseUnavailableError(err)) {
+            return res.status(503).json({
+                success: false,
+                message: 'Database unavailable. Please try again in a moment.',
+            });
+        }
         res.status(500).json({
             success: false,
             message: 'Server error during registration',
@@ -79,6 +97,7 @@ router.post('/login', [
     check('password', 'Password is required').exists(),
 ], async (req, res) => {
     try {
+        await checkDatabase();
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({ errors: errors.array() });
@@ -111,6 +130,9 @@ router.post('/login', [
         });
     } catch (err) {
         console.error('Login error:', err);
+        if (isDatabaseUnavailableError(err)) {
+            return res.status(503).json({ message: 'Database unavailable. Please try again in a moment.' });
+        }
         res.status(500).json({ message: 'Server error during login' });
     }
 });
