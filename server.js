@@ -10,6 +10,9 @@ require('dotenv').config();
 
 const app = express();
 
+// Behind Vercel/reverse proxies — required for rate-limit IP detection and secure cookies
+app.set('trust proxy', 1);
+
 // Enable CORS pre-flight
 app.options('*', cors());
 
